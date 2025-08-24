@@ -24,20 +24,9 @@ class Database:
         self.SessionLocal = sessionmaker(
             autocommit=False, autoflush=False, bind=self.engine)
 
-    @property
-    def session(self):
-        return self.SessionLocal
-
-    @property
-    def engine(self):
-        return self.engine
-
     def __enter__(self):
         self.session = self.SessionLocal()
         return self.session
-
-    def get_session(self):
-        return self.SessionLocal()
 
     def create_tables(self):
         Base.metadata.create_all(bind=self.engine)

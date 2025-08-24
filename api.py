@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from routes.empresas import EmpresasRouter
+from routes.usuarios import UsuariosRouter
 
 app = FastAPI(
     title="Sistema de Ponto",
@@ -13,3 +14,4 @@ app = FastAPI(
 )
 
 app.include_router(EmpresasRouter())
+app.include_router(UsuariosRouter())
