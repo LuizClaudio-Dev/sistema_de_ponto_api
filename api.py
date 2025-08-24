@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 
+from routes.empresas import EmpresasRouter
+
 app = FastAPI(
     title="Sistema de Ponto",
     description="API para gerenciamento de ponto de funcionários",
@@ -10,6 +12,4 @@ app = FastAPI(
     }
 )
 
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to the Sistema de Ponto API"}
+app.include_router(EmpresasRouter())

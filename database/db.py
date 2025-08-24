@@ -1,8 +1,8 @@
 import os
+
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
+from sqlalchemy import URL, create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import URL
 
 from .base import Base
 
@@ -17,11 +17,20 @@ SQLALCHEMY_DATABASE_URL = URL.create(
 )
 # SQLALCHEMY_DATABASE_URL = "postgresql://user:password@postgresserver/dbname"
 
+
 class Database:
     def __init__(self):
         self.engine = create_engine(SQLALCHEMY_DATABASE_URL)
         self.SessionLocal = sessionmaker(
             autocommit=False, autoflush=False, bind=self.engine)
+
+    @property
+    def session(self):
+        return self.SessionLocal
+
+    @property
+    def engine(self):
+        return self.engine
 
     def __enter__(self):
         self.session = self.SessionLocal()
@@ -29,7 +38,7 @@ class Database:
 
     def get_session(self):
         return self.SessionLocal()
-    
+
     def create_tables(self):
         Base.metadata.create_all(bind=self.engine)
 
