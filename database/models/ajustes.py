@@ -54,10 +54,10 @@ class Ajustes(Base):
                              ] = mapped_column(DateTime, onupdate=text('CURRENT_TIMESTAMP'))
 
     empresa: Mapped[Optional["Empresas"]] = relationship(
-        "Empresas", back_populates="ajustes")
+        "Empresas")
 
     usuario_solicitante: Mapped[Optional["Usuarios"]] = relationship(
-        "Usuarios", back_populates="ajustes_solicitante")
+        "Usuarios", foreign_keys=[id_usuario_solicitante])
 
     usuario_autorizador: Mapped[Optional["Usuarios"]] = relationship(
-        "Usuarios", back_populates="ajustes_autorizador")
+        "Usuarios", foreign_keys=[id_usuario_autorizador])

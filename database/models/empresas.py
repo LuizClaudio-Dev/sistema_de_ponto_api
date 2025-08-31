@@ -23,6 +23,7 @@ class Empresas(Base):
     nome_fantasia: Mapped[str] = mapped_column(String(100), nullable=False)
     cep: Mapped[Optional[str]] = mapped_column(String(8))
     logradouro: Mapped[Optional[str]] = mapped_column(String(100))
+    complemento: Mapped[Optional[str]] = mapped_column(String(100))
     numero: Mapped[Optional[str]] = mapped_column(String(10))
     bairro: Mapped[Optional[str]] = mapped_column(String(100))
     cidade: Mapped[Optional[str]] = mapped_column(String(100))
@@ -35,6 +36,3 @@ class Empresas(Base):
         TIMESTAMP, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
     data_atualizacao: Mapped[Optional[datetime.datetime]] = mapped_column(
         TIMESTAMP, nullable=True, onupdate=text("CURRENT_TIMESTAMP"))
-
-    empresas_usuarios: Mapped[List["EmpresasUsuarios"]] = relationship(
-        "EmpresasUsuarios", back_populates="empresa")

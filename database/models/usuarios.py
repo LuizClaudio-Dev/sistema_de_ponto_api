@@ -32,6 +32,3 @@ class Usuarios(Base):
         TIMESTAMP, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
     data_atualizacao: Mapped[Optional[datetime.datetime]] = mapped_column(
         TIMESTAMP, nullable=True, onupdate=text("CURRENT_TIMESTAMP"))
-
-    empresas_usuarios: Mapped[List["EmpresasUsuarios"]] = relationship(
-        "EmpresasUsuarios", back_populates="usuario")

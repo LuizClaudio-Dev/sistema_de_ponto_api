@@ -5,7 +5,7 @@ from typing import Optional
 from sqlalchemy import (SMALLINT, BigInteger, DateTime, ForeignKeyConstraint,
                         PrimaryKeyConstraint, Text, text)
 from sqlalchemy.dialects.postgresql import DOMAIN
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..base import Base
 
@@ -44,4 +44,9 @@ class EmpresasUsuariosPerfis(Base):
     motivo: Mapped[Optional[str]] = mapped_column(Text)
     data_criacao: Mapped[Optional[datetime.datetime]] = mapped_column(
         DateTime, server_default=text('now()'))
-    data_atualizacao: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, onupdate=text("CURRENT_TIMESTAMP"))
+    data_atualizacao: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime, onupdate=text("CURRENT_TIMESTAMP"))
+
+    empresa: Mapped["Empresas"] = relationship("Empresas")
+    usuario: Mapped["Usuarios"] = relationship("Usuarios")
+    perfil: Mapped["Perfis"] = relationship("Perfis")

@@ -56,13 +56,11 @@ class Abonos(Base):
     data_atualizacao: Mapped[Optional[datetime.datetime]
                              ] = mapped_column(DateTime, onupdate=text('CURRENT_TIMESTAMP'))
 
-    empresa: Mapped[Optional["Empresas"]] = relationship(
-        "Empresas", back_populates="abonos"
-    )
+    empresa: Mapped[Optional["Empresas"]] = relationship("Empresas")
 
     usuario_solicitante: Mapped[Optional["Usuarios"]] = relationship(
-        "Usuarios", back_populates="abonos_solicitados"
+        "Usuarios", foreign_keys=[id_usuario_solicitante]
     )
     usuario_autorizador: Mapped[Optional["Usuarios"]] = relationship(
-        "Usuarios", back_populates="abonos_autorizados"
+        "Usuarios", foreign_keys=[id_usuario_autorizador]
     )

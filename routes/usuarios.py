@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 
 from database.db import Database
 from database.models import Usuarios
-from models.usuarios import GetUsuario, SetUsuario
+from schemas.usuarios import GetUsuario, SetUsuario
 from utils import error_message, fernet_crypt_info, hash_password
 
 
