@@ -42,6 +42,8 @@ class RegistrosPontos(Base):
     longitude: Mapped[Optional[decimal.Decimal]
                       ] = mapped_column(Numeric(11, 8))
     foto: Mapped[Optional[str]] = mapped_column(Text)
+    data_hora_ponto: Mapped[datetime.datetime] = mapped_column(
+        DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
     saldo_horas: Mapped[Optional[datetime.time]] = mapped_column(Time)
     ativo: Mapped[int] = mapped_column(DOMAIN('status_registro', SMALLINT(), default='1', constraint_name='status_registro_check',
                                        not_null=True, check=text('VALUE = ANY (ARRAY[0, 1, 2])')), nullable=False, server_default=text('1'))
