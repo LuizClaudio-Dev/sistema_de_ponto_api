@@ -37,32 +37,3 @@ def fernet_decrypt_info(info: str):
     key = os.getenv('fernet_secret_key')
     fernet = Fernet(key)
     return fernet.decrypt(info.encode()).decode()
-
-
-def model_dict_json_serializer(model: list[dict[str, any]] | dict[str, any]) -> list[dict[str, any]] | dict[str, any]:
-    if isinstance(model, list):
-        result = json.loads(json.dumps(
-            model, default=lambda o: o.isoformat() if isinstance(o, datetime) else o))
-        return result
-    else:
-        result = model
-        for key, value in result.items():
-            if isinstance(value, datetime):
-                model[key] = value.isoformat()
-        return result
-
-
-def resposta_get_com_paginacao(titulo: str, resposta: dict[str, any], total: int, pagina: int, limite: int):
-    total_paginas = (total + limite - 1) // limite
-
-    resposta = {
-        "data": {titulo: resposta},
-        "pagination": {
-            "total": total,
-            "pagina": pagina,
-            "limite": limite,
-            "total_paginas": total_paginas,
-        },
-    }
-
-    return resposta

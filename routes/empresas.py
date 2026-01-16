@@ -5,8 +5,8 @@ from sqlalchemy import func
 from database.db import Database
 from database.models import Empresas
 from schemas.empresas import ListEmpresas, SetEmpresa
-from utils import (error_message, model_dict_json_serializer,
-                   resposta_get_com_paginacao)
+from utils import (error_message, get_response_with_pagination,
+                   model_dict_json_serializer)
 
 
 class EmpresasRouter(APIRouter):
@@ -65,7 +65,7 @@ class EmpresasRouter(APIRouter):
                 model_list_empresas.empresas = [model_dict_json_serializer(ListEmpresas.Empresa.model_validate(
                     empresa).model_dump()) for empresa in db_empresas]
 
-            return JSONResponse(resposta_get_com_paginacao('empresas', model_list_empresas.empresas, total, pagina, limite), 200)
+            return JSONResponse(get_response_with_pagination('empresas', model_list_empresas.empresas, total, pagina, limite), 200)
         except Exception as E:
             error_message(E)
 
