@@ -13,7 +13,9 @@ SQLALCHEMY_DATABASE_URL = URL.create(
     username=os.getenv('database_user'),
     password=os.getenv('database_password'),
     host=os.getenv('database_host'),
-    database=os.getenv('database_name')
+    database=os.getenv('database_name'),
+    port=os.getenv('database_port'),
+    query={"sslmode":os.getenv('database_sslmode','require')}
 )
 # SQLALCHEMY_DATABASE_URL = "postgresql://user:password@postgresserver/dbname"
 

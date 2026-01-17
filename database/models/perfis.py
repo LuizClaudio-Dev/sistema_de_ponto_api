@@ -25,3 +25,6 @@ class Perfis(Base):
         DateTime, server_default=text('now()'))
     data_atualizacao: Mapped[Optional[datetime.datetime]
                              ] = mapped_column(DateTime, onupdate=text('CURRENT_TIMESTAMP'))
+
+    def __str__(self) -> str:
+        return self.descricao

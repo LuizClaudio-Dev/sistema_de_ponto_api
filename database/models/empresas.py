@@ -36,3 +36,6 @@ class Empresas(Base):
         TIMESTAMP, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
     data_atualizacao: Mapped[Optional[datetime.datetime]] = mapped_column(
         TIMESTAMP, nullable=True, onupdate=text("CURRENT_TIMESTAMP"))
+
+    def __str__(self) -> str:
+        return self.nome_fantasia

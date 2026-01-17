@@ -34,7 +34,9 @@ SQLALCHEMY_DATABASE_URL = URL.create(
     username=os.getenv('database_user'),
     password=os.getenv('database_password'),
     host=os.getenv('database_host'),
-    database=os.getenv('database_name')
+    database=os.getenv('database_name'),
+    port=os.getenv('database_port'),
+    query={"sslmode":os.getenv('database_sslmode','require')}
 ).render_as_string(hide_password=False)
 
 config.set_main_option('sqlalchemy.url', SQLALCHEMY_DATABASE_URL)
