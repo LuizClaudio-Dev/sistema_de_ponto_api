@@ -1,0 +1,15 @@
+[project]
+name = "sistema-de-ponto-api"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "alembic>=1.19.1",
+    "asyncpg>=0.31.0",
+    "cryptography>=50.0.0",
+    "fastapi[all]>=0.141.1",
+    "gunicorn>=26.0.0",
+    "pillow>=12.3.0",
+    "sqlalchemy>=2.0.52",
+]
