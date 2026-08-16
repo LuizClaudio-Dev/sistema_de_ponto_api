@@ -4,7 +4,7 @@ from typing import List, Optional
 import brutils
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from schemas.common.paginacao import Paginacao
+from src.schemas.common.paginacao import Paginacao
 
 
 class SetEmpresa(BaseModel):

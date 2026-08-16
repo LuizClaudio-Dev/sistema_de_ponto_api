@@ -5,10 +5,10 @@ from typing import List
 from fastapi import APIRouter, Body, Path, Query
 from fastapi.responses import JSONResponse
 
-from database.db import Database
-from database.models import Usuarios
-from schemas.usuarios import GetUsuario, SetUsuario
-from utils import error_message, fernet_crypt_info, hash_password
+from src.database.db import Database
+from src.database.models import Usuarios
+from src.schemas.usuarios import GetUsuario, SetUsuario
+from src.utils import error_message, fernet_crypt_info, hash_password
 
 
 class UsuariosRouter(APIRouter):

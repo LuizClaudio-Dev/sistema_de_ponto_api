@@ -2,10 +2,10 @@ from fastapi import APIRouter, Body, HTTPException, Path, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy import func
 
-from database.db import Database
-from database.models import Empresas
-from schemas.empresas import ListEmpresas, SetEmpresa
-from utils import (error_message, get_response_with_pagination,
+from src.database.db import Database
+from src.database.models import Empresas
+from src.schemas.empresas import ListEmpresas, SetEmpresa
+from src.utils import (error_message, get_response_with_pagination,
                    model_dict_json_serializer)
 
 
