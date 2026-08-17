@@ -141,7 +141,7 @@ class Pessoas(CommonBase):
     pessoas_fisicas: Mapped[List["PessoasJuridicasFisicas"]] = relationship(
         "PessoasJuridicasFisicas", foreign_keys="PessoasJuridicasFisicas.id_pessoa_fisica", back_populates="pessoa_fisica", lazy="raise")
     usuario: Mapped["Usuarios"] = relationship(
-        "Usuarios", back_populates="pessoas", lazy="raise")
+        "Usuarios", back_populates="pessoa", lazy="raise")
 
 
 class PessoasDadosAdicionais(CommonBase):
@@ -274,5 +274,5 @@ class Usuarios(CommonBase):
     is_master: Mapped[bool] = mapped_column(
         Boolean, default=False, server_default=text("false"), nullable=False)
 
-    pessoas: Mapped["Pessoas"] = relationship(
+    pessoa: Mapped["Pessoas"] = relationship(
         "Pessoas", back_populates="usuario", lazy="raise")
