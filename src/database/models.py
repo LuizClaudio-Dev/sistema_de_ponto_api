@@ -16,8 +16,8 @@ class CommonBase(Base):
         Boolean, default=True, server_default=text("true"), nullable=False)
     excluido: Mapped[bool] = mapped_column(
         Boolean, default=False, server_default=text("false"), nullable=False)
-    motivo_exclusao: Mapped[str] = mapped_column(
-        Text, default=None)
+    motivo_exclusao: Mapped[Optional[str]] = mapped_column(
+        Text, default=None, nullable=True)
     data_criacao: Mapped[datetime.datetime] = mapped_column(TIMESTAMP(timezone=False),
                                                             nullable=False,
                                                             default=datetime.datetime.now,
@@ -40,7 +40,7 @@ class PessoasDocumentosTipos(CommonBase):
     descricao: Mapped[str] = mapped_column(
         String(100), nullable=False, comment="Descrição do tipo de documento")
 
-    pessoas: Mapped["Pessoas"] = relationship(
+    pessoas: Mapped[List["Pessoas"]] = relationship(
         "Pessoas", back_populates="documento_tipo", lazy="raise")
 
 
@@ -124,7 +124,7 @@ class Pessoas(CommonBase):
         String(14), unique=True, index=True, nullable=False)
     nome: Mapped[str] = mapped_column(String(100), nullable=False)
     nome_social: Mapped[Optional[str]] = mapped_column(String(
-        100), nullable=False, comment='Nome social caso haja, para pessoas jurídicas, é a razão social')
+        100), nullable=True, comment='Nome social caso haja, para pessoas jurídicas, é a razão social')
 
     documento_tipo: Mapped["PessoasDocumentosTipos"] = relationship(
         "PessoasDocumentosTipos", back_populates="pessoas", lazy="raise")
@@ -222,7 +222,7 @@ class PessoasRelacoesTipos(CommonBase):
     descricao: Mapped[str] = mapped_column(
         String(100), nullable=False, comment="Descrição do tipo de relação")
 
-    pessoas_relacoes: Mapped["PessoasJuridicasFisicas"] = relationship(
+    pessoas_juridicas_fisicas: Mapped[List["PessoasJuridicasFisicas"]] = relationship(
         "PessoasJuridicasFisicas", back_populates="pessoas_relacoes_tipos", lazy="raise")
 
 
@@ -244,17 +244,17 @@ class PessoasJuridicasFisicas(CommonBase):
     )
     matricula: Mapped[Optional[str]] = mapped_column(String(100))
     data_admissao: Mapped[Optional[datetime.date]] = mapped_column(
-        Date, nullable=False)
+        Date, nullable=True)
     data_desligamento: Mapped[Optional[datetime.date]] = mapped_column(Date)
     salario: Mapped[Optional[decimal.Decimal]] = mapped_column(
-        Numeric(18, 2), nullable=False)
+        Numeric(18, 2), nullable=True)
 
     pessoa_juridica: Mapped["Pessoas"] = relationship(
         "Pessoas", foreign_keys=[id_pessoa_juridica], back_populates="pessoas_juridicas", lazy="raise")
     pessoa_fisica: Mapped["Pessoas"] = relationship(
         "Pessoas", foreign_keys=[id_pessoa_fisica], back_populates="pessoas_fisicas", lazy="raise")
     pessoas_relacoes_tipos: Mapped["PessoasRelacoesTipos"] = relationship(
-        "PessoasRelacoesTipos", back_populates="pessoas_relacoes", lazy="raise")
+        "PessoasRelacoesTipos", back_populates="pessoas_juridicas_fisicas", lazy="raise")
     cargos: Mapped["Cargos"] = relationship(
         "Cargos", back_populates="pessoas_juridicas_fisicas", lazy="raise")
     jornadas_trabalho: Mapped["JornadasTrabalho"] = relationship(

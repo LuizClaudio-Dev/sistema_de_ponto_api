@@ -19,7 +19,7 @@ def get_response_with_pagination(titulo: str, response: dict[str, any], total: i
     total_pages = (total + limit - 1) // limit
 
     response = {
-        "data": {titulo: response},
+        "data": [] | {},
         "pagination": {
             "total": total,
             "page": page,
