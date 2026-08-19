@@ -32,3 +32,21 @@ class DiaSemana(CommonIntEnum):
 class TipoPeriodo(CommonIntEnum):
     TRABALHO = 1
     INTERVALO = 2
+
+
+class TipoBatida(CommonIntEnum):
+    ENTRADA = 1
+    SAIDA = 2
+
+
+class StatusSolicitacao(CommonIntEnum):
+    PENDENTE = 1
+    APROVADO = 2
+    REJEITADO = 3
+
+
+class TipoFeriado(CommonIntEnum):
+    NACIONAL = 1
+    ESTADUAL = 2
+    MUNICIPAL = 3
+    EMPRESA = 4

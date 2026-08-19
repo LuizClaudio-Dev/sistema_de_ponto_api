@@ -2,7 +2,8 @@ import datetime
 import decimal
 from typing import List, Optional
 
-from src.database.enums import DiaSemana, TipoPessoa, TipoPeriodo
+from src.database.enums import (DiaSemana, StatusSolicitacao, TipoBatida,
+                                TipoFeriado, TipoPessoa, TipoPeriodo)
 
 from .base import Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -169,6 +170,8 @@ class Pessoas(CommonBase):
         "PessoasJuridicasFisicas", foreign_keys="PessoasJuridicasFisicas.id_pessoa_fisica", back_populates="pessoa_fisica", lazy="raise")
     usuario: Mapped["Usuarios"] = relationship(
         "Usuarios", back_populates="pessoa", lazy="raise")
+    configuracoes: Mapped[List["PessoasConfiguracoes"]] = relationship(
+        "PessoasConfiguracoes", back_populates="pessoa", lazy="raise")
 
 
 class PessoasDadosAdicionais(CommonBase):
@@ -296,6 +299,12 @@ class PessoasJuridicasFisicas(CommonBase):
         "Cargos", back_populates="pessoas_juridicas_fisicas", lazy="raise")
     jornadas_trabalho: Mapped["JornadasTrabalho"] = relationship(
         "JornadasTrabalho", back_populates="pessoas_juridicas_fisicas", lazy="raise")
+    registros_pontos: Mapped[List["RegistrosPontos"]] = relationship(
+        "RegistrosPontos", back_populates="vinculo", lazy="raise")
+    abonos: Mapped[List["Abonos"]] = relationship(
+        "Abonos", back_populates="vinculo", lazy="raise")
+    ajustes: Mapped[List["Ajustes"]] = relationship(
+        "Ajustes", back_populates="vinculo", lazy="raise")
 
 
 class Usuarios(CommonBase):
@@ -313,3 +322,211 @@ class Usuarios(CommonBase):
 
     pessoa: Mapped["Pessoas"] = relationship(
         "Pessoas", back_populates="usuario", lazy="raise")
+    abonos_autorizados: Mapped[List["Abonos"]] = relationship(
+        "Abonos", foreign_keys="Abonos.id_usuario_autorizador", back_populates="usuario_autorizador", lazy="raise")
+    ajustes_autorizados: Mapped[List["Ajustes"]] = relationship(
+        "Ajustes", foreign_keys="Ajustes.id_usuario_autorizador", back_populates="usuario_autorizador", lazy="raise")
+    anexos_enviados: Mapped[List["AbonosAnexos"]] = relationship(
+        "AbonosAnexos", foreign_keys="AbonosAnexos.id_usuario_upload", back_populates="usuario_upload", lazy="raise")
+
+
+class RegistrosPontos(CommonBase):
+    __tablename__ = "registros_pontos"
+
+    id_registro_ponto: Mapped[int] = mapped_column(
+        BigInteger, primary_key=True, autoincrement=True)
+    id_pessoa_juridica_fisica: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("pessoas_juridicas_fisicas.id_pessoa_juridica_fisica"), nullable=False)
+    tipo: Mapped[TipoBatida] = mapped_column(
+        SmallInteger, nullable=False, comment="1 = Entrada, 2 = Saída")
+    data_hora_ponto: Mapped[datetime.datetime] = mapped_column(
+        TIMESTAMP(timezone=False), nullable=False, comment="Data e hora exatas da batida")
+    latitude: Mapped[Optional[decimal.Decimal]] = mapped_column(Numeric(10, 8))
+    longitude: Mapped[Optional[decimal.Decimal]] = mapped_column(Numeric(11, 8))
+    foto: Mapped[Optional[str]] = mapped_column(
+        Text, comment="Caminho/URL da foto do funcionário na batida. Obrigatoriedade definida por configuração da empresa.")
+
+    __table_args__ = (
+        CheckConstraint("tipo IN (1, 2)",
+                        name="ck_registros_pontos_tipo"),
+        CheckConstraint("latitude IS NULL OR latitude BETWEEN -90 AND 90",
+                        name="ck_registros_pontos_latitude"),
+        CheckConstraint("longitude IS NULL OR longitude BETWEEN -180 AND 180",
+                        name="ck_registros_pontos_longitude"),
+    )
+
+    vinculo: Mapped["PessoasJuridicasFisicas"] = relationship(
+        "PessoasJuridicasFisicas", back_populates="registros_pontos", lazy="raise")
+    ajustes_registros_pontos: Mapped[List["AjustesRegistrosPontos"]] = relationship(
+        "AjustesRegistrosPontos", back_populates="registro_ponto", lazy="raise")
+
+
+class Abonos(CommonBase):
+    __tablename__ = "abonos"
+
+    id_abono: Mapped[int] = mapped_column(
+        BigInteger, primary_key=True, autoincrement=True)
+    id_pessoa_juridica_fisica: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("pessoas_juridicas_fisicas.id_pessoa_juridica_fisica"), nullable=False)
+    id_usuario_autorizador: Mapped[Optional[int]] = mapped_column(
+        BigInteger, ForeignKey("usuarios.id_usuario"))
+    data: Mapped[datetime.date] = mapped_column(
+        Date, nullable=False, comment="Dia do abono")
+    minutos_abono: Mapped[int] = mapped_column(
+        SmallInteger, nullable=False, comment="Minutos abonados no dia. Não pode exceder a duração da jornada do dia (validado na aplicação).")
+    descricao: Mapped[Optional[str]] = mapped_column(Text)
+    status: Mapped[StatusSolicitacao] = mapped_column(
+        SmallInteger, nullable=False, comment="1 = Pendente, 2 = Aprovado, 3 = Rejeitado")
+
+    __table_args__ = (
+        CheckConstraint("minutos_abono > 0",
+                        name="ck_abonos_minutos_abono"),
+        CheckConstraint("status IN (1, 2, 3)",
+                        name="ck_abonos_status"),
+    )
+
+    vinculo: Mapped["PessoasJuridicasFisicas"] = relationship(
+        "PessoasJuridicasFisicas", back_populates="abonos", lazy="raise")
+    usuario_autorizador: Mapped[Optional["Usuarios"]] = relationship(
+        "Usuarios", foreign_keys=[id_usuario_autorizador], back_populates="abonos_autorizados", lazy="raise")
+    anexos: Mapped[List["AbonosAnexos"]] = relationship(
+        "AbonosAnexos", back_populates="abono", lazy="raise",
+        cascade="all, delete-orphan")
+
+
+class AbonosAnexos(CommonBase):
+    __tablename__ = "abonos_anexos"
+
+    id_abono_anexo: Mapped[int] = mapped_column(
+        BigInteger, primary_key=True, autoincrement=True)
+    id_abono: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("abonos.id_abono"), nullable=False)
+    id_usuario_upload: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("usuarios.id_usuario"), nullable=False)
+    nome_original: Mapped[str] = mapped_column(String(255), nullable=False)
+    caminho: Mapped[str] = mapped_column(
+        Text, nullable=False, comment="Caminho/URL do arquivo no storage")
+    tipo_mime: Mapped[Optional[str]] = mapped_column(String(100))
+    tamanho_bytes: Mapped[Optional[int]] = mapped_column(BigInteger)
+    hash: Mapped[Optional[str]] = mapped_column(String(64))
+
+    abono: Mapped["Abonos"] = relationship(
+        "Abonos", back_populates="anexos", lazy="raise")
+    usuario_upload: Mapped["Usuarios"] = relationship(
+        "Usuarios", foreign_keys=[id_usuario_upload], back_populates="anexos_enviados", lazy="raise")
+
+
+class Ajustes(CommonBase):
+    __tablename__ = "ajustes"
+
+    id_ajuste: Mapped[int] = mapped_column(
+        BigInteger, primary_key=True, autoincrement=True)
+    id_pessoa_juridica_fisica: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("pessoas_juridicas_fisicas.id_pessoa_juridica_fisica"), nullable=False)
+    id_usuario_autorizador: Mapped[Optional[int]] = mapped_column(
+        BigInteger, ForeignKey("usuarios.id_usuario"))
+    data: Mapped[datetime.date] = mapped_column(
+        Date, nullable=False, comment="Dia dos registros de ponto afetados pelo ajuste")
+    descricao: Mapped[Optional[str]] = mapped_column(Text)
+    status: Mapped[StatusSolicitacao] = mapped_column(
+        SmallInteger, nullable=False, comment="1 = Pendente, 2 = Aprovado, 3 = Rejeitado")
+
+    __table_args__ = (
+        CheckConstraint("status IN (1, 2, 3)",
+                        name="ck_ajustes_status"),
+    )
+
+    vinculo: Mapped["PessoasJuridicasFisicas"] = relationship(
+        "PessoasJuridicasFisicas", back_populates="ajustes", lazy="raise")
+    usuario_autorizador: Mapped[Optional["Usuarios"]] = relationship(
+        "Usuarios", foreign_keys=[id_usuario_autorizador], back_populates="ajustes_autorizados", lazy="raise")
+    ajustes_registros_pontos: Mapped[List["AjustesRegistrosPontos"]] = relationship(
+        "AjustesRegistrosPontos", back_populates="ajuste", lazy="raise",
+        cascade="all, delete-orphan")
+
+
+class AjustesRegistrosPontos(CommonBase):
+    __tablename__ = "ajustes_registros_pontos"
+
+    id_ajuste_registro_ponto: Mapped[int] = mapped_column(
+        BigInteger, primary_key=True, autoincrement=True)
+    id_ajuste: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("ajustes.id_ajuste"), nullable=False)
+    id_registro_ponto: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("registros_pontos.id_registro_ponto"), nullable=False)
+    hora_atual: Mapped[Optional[datetime.time]] = mapped_column(Time)
+    hora_ajuste: Mapped[Optional[datetime.time]] = mapped_column(Time)
+
+    __table_args__ = (
+        UniqueConstraint("id_ajuste", "id_registro_ponto",
+                         name="uq_ajustes_registros_pontos_ajuste_registro"),
+    )
+
+    ajuste: Mapped["Ajustes"] = relationship(
+        "Ajustes", back_populates="ajustes_registros_pontos", lazy="raise")
+    registro_ponto: Mapped["RegistrosPontos"] = relationship(
+        "RegistrosPontos", back_populates="ajustes_registros_pontos", lazy="raise")
+
+
+class Feriados(CommonBase):
+    __tablename__ = "feriados"
+
+    id_feriado: Mapped[int] = mapped_column(
+        BigInteger, primary_key=True, autoincrement=True)
+    data_feriado: Mapped[datetime.date] = mapped_column(Date, nullable=False)
+    tipo: Mapped[TipoFeriado] = mapped_column(
+        SmallInteger, nullable=False, comment="1 = Nacional, 2 = Estadual, 3 = Municipal, 4 = Empresa")
+    descricao: Mapped[Optional[str]] = mapped_column(Text)
+
+    __table_args__ = (
+        UniqueConstraint("data_feriado", name="uq_feriados_data_feriado"),
+        CheckConstraint("tipo IN (1, 2, 3, 4)",
+                        name="ck_feriados_tipo"),
+    )
+
+
+class PessoasConfiguracoesTipos(CommonBase):
+    __tablename__ = "pessoas_configuracoes_tipos"
+
+    id_pessoa_configuracao_tipo: Mapped[int] = mapped_column(
+        BigInteger, primary_key=True, autoincrement=True)
+    pessoa_fisica_juridica: Mapped[TipoPessoa] = mapped_column(
+        SmallInteger, nullable=False, comment="1 = Pessoa física, 2 = Pessoa jurídica")
+    chave: Mapped[str] = mapped_column(
+        String(100), nullable=False, comment="Chave identificadora da configuração")
+    descricao: Mapped[str] = mapped_column(
+        String(200), nullable=False, comment="Descrição da configuração")
+    tipo_valor: Mapped[str] = mapped_column(
+        String(50), nullable=False, comment="Tipo do valor: boolean, integer, decimal, text, json")
+
+    __table_args__ = (
+        UniqueConstraint("chave", name="uq_pessoas_configuracoes_tipos_chave"),
+        CheckConstraint("pessoa_fisica_juridica IN (1, 2)",
+                        name="ck_pessoas_configuracoes_tipos_pessoa_fisica_juridica"),
+    )
+
+    configuracoes: Mapped[List["PessoasConfiguracoes"]] = relationship(
+        "PessoasConfiguracoes", back_populates="configuracao_tipo", lazy="raise")
+
+
+class PessoasConfiguracoes(CommonBase):
+    __tablename__ = "pessoas_configuracoes"
+
+    id_pessoa_configuracao: Mapped[int] = mapped_column(
+        BigInteger, primary_key=True, autoincrement=True)
+    id_pessoa: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("pessoas.id_pessoa"), nullable=False)
+    id_pessoa_configuracao_tipo: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("pessoas_configuracoes_tipos.id_pessoa_configuracao_tipo"), nullable=False)
+    valor: Mapped[str] = mapped_column(
+        Text, nullable=False, comment="Valor da configuração, interpretado pela aplicação conforme tipo_valor")
+
+    __table_args__ = (
+        UniqueConstraint("id_pessoa", "id_pessoa_configuracao_tipo",
+                         name="uq_pessoas_configuracoes_pessoa_tipo"),
+    )
+
+    pessoa: Mapped["Pessoas"] = relationship(
+        "Pessoas", back_populates="configuracoes", lazy="raise")
+    configuracao_tipo: Mapped["PessoasConfiguracoesTipos"] = relationship(
+        "PessoasConfiguracoesTipos", back_populates="configuracoes", lazy="raise")
