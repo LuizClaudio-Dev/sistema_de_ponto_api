@@ -6,7 +6,9 @@ from src.database.enums import DiaSemana, TipoPessoa, TipoPeriodo
 
 from .base import Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import BigInteger, Boolean, Date, ForeignKey, Numeric, SmallInteger, String, Text, TIMESTAMP, Time, text
+from sqlalchemy import (BigInteger, Boolean, CheckConstraint, Date, ForeignKey,
+                        Numeric, SmallInteger, String, Text, TIMESTAMP, Time,
+                        UniqueConstraint, text)
 
 
 class CommonBase(Base):
@@ -32,6 +34,10 @@ class CommonBase(Base):
 
 class PessoasDocumentosTipos(CommonBase):
     __tablename__ = "pessoas_documentos_tipos"
+    __table_args__ = (
+        CheckConstraint("pessoa_fisica_juridica IN (1, 2)",
+                        name="ck_pessoas_documentos_tipos_pessoa_fisica_juridica"),
+    )
 
     id_pessoa_documento_tipo: Mapped[int] = mapped_column(
         BigInteger, primary_key=True, autoincrement=True)
@@ -46,9 +52,10 @@ class PessoasDocumentosTipos(CommonBase):
 
 class PessoasDadosAdicionaisTipos(CommonBase):
     __tablename__ = "pessoas_dados_adicionais_tipos"
-
-    pessoas_dados_adicionais: Mapped[List["PessoasDadosAdicionais"]] = relationship(
-        "PessoasDadosAdicionais", back_populates="dados_adicionais_tipos", lazy="raise")
+    __table_args__ = (
+        CheckConstraint("pessoa_fisica_juridica IN (1, 2)",
+                        name="ck_pessoas_dados_adicionais_tipos_pessoa_fisica_juridica"),
+    )
 
     id_pessoa_dados_adicionais_tipo: Mapped[int] = mapped_column(
         BigInteger, primary_key=True, autoincrement=True)
@@ -56,6 +63,9 @@ class PessoasDadosAdicionaisTipos(CommonBase):
         SmallInteger, nullable=False, comment="1 = Pessoa física, 2 = Pessoa jurídica")
     descricao: Mapped[str] = mapped_column(
         String(100), nullable=False, comment="Descrição do tipo de dado adicional")
+
+    pessoas_dados_adicionais: Mapped[List["PessoasDadosAdicionais"]] = relationship(
+        "PessoasDadosAdicionais", back_populates="dados_adicionais_tipos", lazy="raise")
 
 class Cargos(CommonBase):
     __tablename__ = "cargos"
@@ -90,6 +100,16 @@ class JornadasTrabalho(CommonBase):
 
 class JornadasTrabalhoPeriodos(CommonBase):
     __tablename__ = "jornadas_trabalho_periodos"
+    __table_args__ = (
+        UniqueConstraint("id_jornada_trabalho", "dia_semana", "ordem",
+                         name="uq_jornadas_trabalho_periodos_jornada_dia_ordem"),
+        CheckConstraint("hora_inicio < hora_fim",
+                        name="ck_jornadas_trabalho_periodos_hora_inicio_fim"),
+        CheckConstraint("dia_semana IN (1, 2, 3, 4, 5, 6, 7)",
+                        name="ck_jornadas_trabalho_periodos_dia_semana"),
+        CheckConstraint("tipo_periodo IN (1, 2)",
+                        name="ck_jornadas_trabalho_periodos_tipo_periodo"),
+    )
 
     id_jornada_trabalho_periodo: Mapped[int] = mapped_column(
         BigInteger, primary_key=True, autoincrement=True)
@@ -107,12 +127,17 @@ class JornadasTrabalhoPeriodos(CommonBase):
     hora_fim: Mapped[datetime.time] = mapped_column(
         Time(timezone=False), nullable=False)
 
+
     jornada_trabalho: Mapped["JornadasTrabalho"] = relationship(
         "JornadasTrabalho", back_populates="periodos", lazy="raise")
 
 
 class Pessoas(CommonBase):
     __tablename__ = "pessoas"
+    __table_args__ = (
+        CheckConstraint("pessoa_fisica_juridica IN (1, 2)",
+                        name="ck_pessoas_pessoa_fisica_juridica"),
+    )
 
     id_pessoa: Mapped[int] = mapped_column(
         BigInteger, primary_key=True, autoincrement=True)
@@ -121,10 +146,12 @@ class Pessoas(CommonBase):
     pessoa_fisica_juridica: Mapped[TipoPessoa] = mapped_column(
         SmallInteger, nullable=False)
     documento: Mapped[str] = mapped_column(
-        String(14), unique=True, index=True, nullable=False)
+        String(140), index=True, nullable=False,
+        comment="CPF criptografado (Fernet) para pessoa física ou CNPJ em texto puro para jurídica. Unicidade validada na aplicação.")
     nome: Mapped[str] = mapped_column(String(100), nullable=False)
     nome_social: Mapped[Optional[str]] = mapped_column(String(
         100), nullable=True, comment='Nome social caso haja, para pessoas jurídicas, é a razão social')
+
 
     documento_tipo: Mapped["PessoasDocumentosTipos"] = relationship(
         "PessoasDocumentosTipos", back_populates="pessoas", lazy="raise")
@@ -228,6 +255,16 @@ class PessoasRelacoesTipos(CommonBase):
 
 class PessoasJuridicasFisicas(CommonBase):
     __tablename__ = "pessoas_juridicas_fisicas"
+    __table_args__ = (
+        UniqueConstraint("id_pessoa_juridica", "matricula",
+                         name="uq_pessoas_juridicas_fisicas_juridica_matricula"),
+        CheckConstraint("id_pessoa_juridica <> id_pessoa_fisica",
+                        name="ck_pessoas_juridicas_fisicas_nao_auto_relacao"),
+        CheckConstraint("data_desligamento IS NULL OR data_desligamento >= data_admissao",
+                        name="ck_pessoas_juridicas_fisicas_desligamento_admissao"),
+        CheckConstraint("salario IS NULL OR salario >= 0",
+                        name="ck_pessoas_juridicas_fisicas_salario"),
+    )
 
     id_pessoa_juridica_fisica: Mapped[int] = mapped_column(
         BigInteger, primary_key=True, autoincrement=True)
