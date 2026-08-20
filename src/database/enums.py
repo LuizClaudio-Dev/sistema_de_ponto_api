@@ -50,3 +50,17 @@ class TipoFeriado(CommonIntEnum):
     ESTADUAL = 2
     MUNICIPAL = 3
     EMPRESA = 4
+
+class ModulosSistema(CommonIntEnum):
+    USUARIOS = 1
+    PERFIS = 2
+    PERMISSOES = 3
+    VINCULOS = 4 # pessoas_juridicas_fisicas
+    CARGOS = 5
+    JORNADAS = 6 # jornadas_trabalho
+    REGISTROS_PONTOS = 7 # registros_pontos
+    ABONOS = 8
+    AJUSTES = 9
+    FERIADOS = 10
+    CONFIGURACOES = 11
+    PESSOAS = 12 # Cadastro de pessoas físicas / jurídicas
