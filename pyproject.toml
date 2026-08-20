@@ -9,7 +9,10 @@ dependencies = [
     "asyncpg>=0.31.0",
     "cryptography>=50.0.0",
     "fastapi[all]>=0.141.1",
+    "pydantic-settings>=2.15.0",
     "gunicorn>=26.0.0",
     "pillow>=12.3.0",
     "sqlalchemy>=2.0.52",
+    "aiosqlite>=0.22.1",
+    "argon2-cffi>=25.1.0",
 ]

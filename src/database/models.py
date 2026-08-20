@@ -332,6 +332,14 @@ class Usuarios(CommonBase):
 
 class RegistrosPontos(CommonBase):
     __tablename__ = "registros_pontos"
+    __table_args__ = (
+        CheckConstraint("tipo IN (1, 2)",
+                        name="ck_registros_pontos_tipo"),
+        CheckConstraint("latitude IS NULL OR latitude BETWEEN -90 AND 90",
+                        name="ck_registros_pontos_latitude"),
+        CheckConstraint("longitude IS NULL OR longitude BETWEEN -180 AND 180",
+                        name="ck_registros_pontos_longitude"),
+    )
 
     id_registro_ponto: Mapped[int] = mapped_column(
         BigInteger, primary_key=True, autoincrement=True)
@@ -346,14 +354,6 @@ class RegistrosPontos(CommonBase):
     foto: Mapped[Optional[str]] = mapped_column(
         Text, comment="Caminho/URL da foto do funcionário na batida. Obrigatoriedade definida por configuração da empresa.")
 
-    __table_args__ = (
-        CheckConstraint("tipo IN (1, 2)",
-                        name="ck_registros_pontos_tipo"),
-        CheckConstraint("latitude IS NULL OR latitude BETWEEN -90 AND 90",
-                        name="ck_registros_pontos_latitude"),
-        CheckConstraint("longitude IS NULL OR longitude BETWEEN -180 AND 180",
-                        name="ck_registros_pontos_longitude"),
-    )
 
     vinculo: Mapped["PessoasJuridicasFisicas"] = relationship(
         "PessoasJuridicasFisicas", back_populates="registros_pontos", lazy="raise")
@@ -363,6 +363,12 @@ class RegistrosPontos(CommonBase):
 
 class Abonos(CommonBase):
     __tablename__ = "abonos"
+    __table_args__ = (
+        CheckConstraint("minutos_abono > 0",
+                        name="ck_abonos_minutos_abono"),
+        CheckConstraint("status IN (1, 2, 3)",
+                        name="ck_abonos_status"),
+    )
 
     id_abono: Mapped[int] = mapped_column(
         BigInteger, primary_key=True, autoincrement=True)
@@ -378,12 +384,6 @@ class Abonos(CommonBase):
     status: Mapped[StatusSolicitacao] = mapped_column(
         SmallInteger, nullable=False, comment="1 = Pendente, 2 = Aprovado, 3 = Rejeitado")
 
-    __table_args__ = (
-        CheckConstraint("minutos_abono > 0",
-                        name="ck_abonos_minutos_abono"),
-        CheckConstraint("status IN (1, 2, 3)",
-                        name="ck_abonos_status"),
-    )
 
     vinculo: Mapped["PessoasJuridicasFisicas"] = relationship(
         "PessoasJuridicasFisicas", back_populates="abonos", lazy="raise")
@@ -418,6 +418,10 @@ class AbonosAnexos(CommonBase):
 
 class Ajustes(CommonBase):
     __tablename__ = "ajustes"
+    __table_args__ = (
+        CheckConstraint("status IN (1, 2, 3)",
+                        name="ck_ajustes_status"),
+    )
 
     id_ajuste: Mapped[int] = mapped_column(
         BigInteger, primary_key=True, autoincrement=True)
@@ -431,10 +435,6 @@ class Ajustes(CommonBase):
     status: Mapped[StatusSolicitacao] = mapped_column(
         SmallInteger, nullable=False, comment="1 = Pendente, 2 = Aprovado, 3 = Rejeitado")
 
-    __table_args__ = (
-        CheckConstraint("status IN (1, 2, 3)",
-                        name="ck_ajustes_status"),
-    )
 
     vinculo: Mapped["PessoasJuridicasFisicas"] = relationship(
         "PessoasJuridicasFisicas", back_populates="ajustes", lazy="raise")
@@ -447,6 +447,10 @@ class Ajustes(CommonBase):
 
 class AjustesRegistrosPontos(CommonBase):
     __tablename__ = "ajustes_registros_pontos"
+    __table_args__ = (
+        UniqueConstraint("id_ajuste", "id_registro_ponto",
+                         name="uq_ajustes_registros_pontos_ajuste_registro"),
+    )
 
     id_ajuste_registro_ponto: Mapped[int] = mapped_column(
         BigInteger, primary_key=True, autoincrement=True)
@@ -457,10 +461,6 @@ class AjustesRegistrosPontos(CommonBase):
     hora_atual: Mapped[Optional[datetime.time]] = mapped_column(Time)
     hora_ajuste: Mapped[Optional[datetime.time]] = mapped_column(Time)
 
-    __table_args__ = (
-        UniqueConstraint("id_ajuste", "id_registro_ponto",
-                         name="uq_ajustes_registros_pontos_ajuste_registro"),
-    )
 
     ajuste: Mapped["Ajustes"] = relationship(
         "Ajustes", back_populates="ajustes_registros_pontos", lazy="raise")
@@ -470,6 +470,11 @@ class AjustesRegistrosPontos(CommonBase):
 
 class Feriados(CommonBase):
     __tablename__ = "feriados"
+    __table_args__ = (
+        UniqueConstraint("data_feriado", name="uq_feriados_data_feriado"),
+        CheckConstraint("tipo IN (1, 2, 3, 4)",
+                        name="ck_feriados_tipo"),
+    )
 
     id_feriado: Mapped[int] = mapped_column(
         BigInteger, primary_key=True, autoincrement=True)
@@ -478,15 +483,15 @@ class Feriados(CommonBase):
         SmallInteger, nullable=False, comment="1 = Nacional, 2 = Estadual, 3 = Municipal, 4 = Empresa")
     descricao: Mapped[Optional[str]] = mapped_column(Text)
 
-    __table_args__ = (
-        UniqueConstraint("data_feriado", name="uq_feriados_data_feriado"),
-        CheckConstraint("tipo IN (1, 2, 3, 4)",
-                        name="ck_feriados_tipo"),
-    )
 
 
 class PessoasConfiguracoesTipos(CommonBase):
     __tablename__ = "pessoas_configuracoes_tipos"
+    __table_args__ = (
+        UniqueConstraint("chave", name="uq_pessoas_configuracoes_tipos_chave"),
+        CheckConstraint("pessoa_fisica_juridica IN (1, 2)",
+                        name="ck_pessoas_configuracoes_tipos_pessoa_fisica_juridica"),
+    )
 
     id_pessoa_configuracao_tipo: Mapped[int] = mapped_column(
         BigInteger, primary_key=True, autoincrement=True)
@@ -499,11 +504,6 @@ class PessoasConfiguracoesTipos(CommonBase):
     tipo_valor: Mapped[str] = mapped_column(
         String(50), nullable=False, comment="Tipo do valor: boolean, integer, decimal, text, json")
 
-    __table_args__ = (
-        UniqueConstraint("chave", name="uq_pessoas_configuracoes_tipos_chave"),
-        CheckConstraint("pessoa_fisica_juridica IN (1, 2)",
-                        name="ck_pessoas_configuracoes_tipos_pessoa_fisica_juridica"),
-    )
 
     configuracoes: Mapped[List["PessoasConfiguracoes"]] = relationship(
         "PessoasConfiguracoes", back_populates="configuracao_tipo", lazy="raise")
@@ -511,6 +511,10 @@ class PessoasConfiguracoesTipos(CommonBase):
 
 class PessoasConfiguracoes(CommonBase):
     __tablename__ = "pessoas_configuracoes"
+    __table_args__ = (
+        UniqueConstraint("id_pessoa", "id_pessoa_configuracao_tipo",
+                         name="uq_pessoas_configuracoes_pessoa_tipo"),
+    )
 
     id_pessoa_configuracao: Mapped[int] = mapped_column(
         BigInteger, primary_key=True, autoincrement=True)
@@ -521,10 +525,6 @@ class PessoasConfiguracoes(CommonBase):
     valor: Mapped[str] = mapped_column(
         Text, nullable=False, comment="Valor da configuração, interpretado pela aplicação conforme tipo_valor")
 
-    __table_args__ = (
-        UniqueConstraint("id_pessoa", "id_pessoa_configuracao_tipo",
-                         name="uq_pessoas_configuracoes_pessoa_tipo"),
-    )
 
     pessoa: Mapped["Pessoas"] = relationship(
         "Pessoas", back_populates="configuracoes", lazy="raise")
