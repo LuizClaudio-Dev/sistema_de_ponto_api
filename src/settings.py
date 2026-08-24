@@ -21,7 +21,15 @@ class Settings(BaseSettings):
     #JWT
     jwt_secret_key: str
     jwt_algorithm: str
-    jwt_access_token_expire_minutes: int
+    jwt_access_token_expire_minutes: int = 30
+    jwt_refresh_token_expire_days: int = 30
+
+    #CORS
+    cors_origins: str = ""
+
+    #Cookies
+    cookie_secure: bool = False
+    cookie_samesite: str = "lax"
 
     #Fernet
     fernet_secret_key: str
@@ -41,6 +49,14 @@ class Settings(BaseSettings):
     database_pool_pre_ping: bool = True
     database_pool_recycle: int = 3600
     database_pool_use_lifo: bool = True
+
+    @property
+    def is_dev(self) -> bool:
+        return self.environment == "dev" or self.environment.startswith("dev-") or self.environment == "local"
+
+    @property
+    def use_secure_cookie(self) -> bool:
+        return self.cookie_secure and not self.is_dev
 
     @property
     def is_sqlite(self) -> bool:

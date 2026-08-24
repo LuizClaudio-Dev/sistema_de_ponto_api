@@ -333,6 +333,8 @@ class Usuarios(CommonBase):
         "Ajustes", foreign_keys="Ajustes.id_usuario_autorizador", back_populates="usuario_autorizador", lazy="raise")
     anexos_enviados: Mapped[List["AbonosAnexos"]] = relationship(
         "AbonosAnexos", foreign_keys="AbonosAnexos.id_usuario_upload", back_populates="usuario_upload", lazy="raise")
+    sessoes: Mapped[List["Sessoes"]] = relationship(
+        "Sessoes", back_populates="usuario", lazy="raise")
 
 
 class RegistrosPontos(CommonBase):
@@ -593,3 +595,36 @@ class PerfisPermissoes(CommonBase):
         "Perfis", back_populates="perfis_permissoes", lazy="raise")
     permissao: Mapped["Permissoes"] = relationship(
         "Permissoes", back_populates="perfis_permissoes", lazy="raise")
+
+
+class Sessoes(CommonBase):
+    __tablename__ = "sessoes"
+
+    id_sessao: Mapped[int] = mapped_column(
+        BigInteger, autoincrement=True, primary_key=True)
+    id_usuario: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("usuarios.id_usuario"), nullable=False)
+    token_hash: Mapped[str] = mapped_column(
+        String(64), nullable=False, unique=True
+    )
+    expira_em: Mapped[datetime.datetime] = mapped_column(
+        TIMESTAMP(timezone=False), nullable=False
+    )
+    ultimo_uso: Mapped[datetime.datetime] = mapped_column(
+        TIMESTAMP(timezone=False), nullable=False
+    )
+
+    revogado: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default=text("false"), nullable=False
+    )
+
+    ip_origem: Mapped[Optional[str]] = mapped_column(
+        String(45), nullable=True
+    )
+
+    user_agent: Mapped[Optional[str]] = mapped_column(
+        String(255), nullable=True
+    )
+
+    usuario: Mapped["Usuarios"] = relationship(
+        "Usuarios", back_populates="sessoes", lazy="raise")
