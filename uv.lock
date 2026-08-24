@@ -959,6 +959,7 @@ dependencies = [
     { name = "fastapi", extra = ["all"] },
     { name = "gunicorn" },
     { name = "pillow" },
+    { name = "pydantic-settings" },
     { name = "sqlalchemy" },
 ]
 
@@ -972,6 +973,7 @@ requires-dist = [
     { name = "fastapi", extras = ["all"], specifier = ">=0.141.1" },
     { name = "gunicorn", specifier = ">=26.0.0" },
     { name = "pillow", specifier = ">=12.3.0" },
+    { name = "pydantic-settings", specifier = ">=2.15.0" },
     { name = "sqlalchemy", specifier = ">=2.0.52" },
 ]
 

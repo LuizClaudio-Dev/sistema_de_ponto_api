@@ -7,7 +7,7 @@ from src.database.enums import (DiaSemana, ModulosSistema, StatusSolicitacao, Ti
 
 from .base import Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import (BigInteger, Boolean, CheckConstraint, Date, ForeignKey,
+from sqlalchemy import (BigInteger, Boolean, CheckConstraint, Date, ForeignKey, Index,
                         Numeric, SmallInteger, String, Text, TIMESTAMP, Time,
                         UniqueConstraint, text)
 
@@ -344,12 +344,16 @@ class RegistrosPontos(CommonBase):
                         name="check_registros_pontos_latitude"),
         CheckConstraint("longitude IS NULL OR longitude BETWEEN -180 AND 180",
                         name="check_registros_pontos_longitude"),
+        Index("unique_registros_pontos_chave_idempotencia", "chave_idempotencia", unique=True)
     )
 
     id_registro_ponto: Mapped[int] = mapped_column(
         BigInteger, primary_key=True, autoincrement=True)
     id_pessoa_juridica_fisica: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("pessoas_juridicas_fisicas.id_pessoa_juridica_fisica"), nullable=False)
+    chave_idempotencia: Mapped[str] = mapped_column(
+        String(40), nullable=False, default="''", server_default=text("''"),
+        comment="Chave de idempotência da batida, gerada e enviada pelo cliente (ex.: UUID v4). Deve ser única por operação, permitindo reutilização em retries sem duplicar o registro.")
     tipo: Mapped[TipoBatida] = mapped_column(
         SmallInteger, nullable=False, comment="1 = Entrada, 2 = Saída")
     data_hora_ponto: Mapped[datetime.datetime] = mapped_column(
@@ -489,7 +493,8 @@ class Feriados(CommonBase):
 class PessoasConfiguracoesTipos(CommonBase):
     __tablename__ = "pessoas_configuracoes_tipos"
     __table_args__ = (
-        UniqueConstraint("chave", name="unique_pessoas_configuracoes_tipos_chave"),
+        UniqueConstraint(
+            "chave", name="unique_pessoas_configuracoes_tipos_chave"),
         CheckConstraint("pessoa_fisica_juridica IN (1, 2)",
                         name="check_pessoas_configuracoes_tipos_pessoa_fisica_juridica"),
     )
@@ -551,7 +556,8 @@ class Perfis(CommonBase):
 class Permissoes(CommonBase):
     __tablename__ = "permissoes"
     __table_args__ = (
-        CheckConstraint("modulo IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)", name="check_permissoes_modulo"),
+        CheckConstraint("modulo IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)",
+                        name="check_permissoes_modulo"),
     )
 
     id_permissao: Mapped[int] = mapped_column(
