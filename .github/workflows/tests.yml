@@ -35,4 +35,4 @@ jobs:
         run: uv pip install --python .venv/bin/python 'pytest>=8,<9'
 
       - name: Run tests
-        run: .venv/bin/pytest -q
+        run: .venv/bin/python -m pytest -q
